@@ -16,10 +16,9 @@ const PITCH = {
 };
 
 class Note {
-	constructor(letter, octave, duration) {
+	constructor(letter, octave) {
 		this.letter = letter; // PITCH
 		this.octave = octave; // int
-		this.duration = duration; // int?
 	}
 }
 
@@ -40,9 +39,9 @@ class Chord {
 
 // a chord example using our class definitions
 sample_chord = new Chord(
-	new Note(PITCH.C, 4, 1),
-	new Note(PITCH.E, 4, 1),
-	new Note(PITCH.G, 4, 1)
+	new Note(PITCH.C, 4),
+	new Note(PITCH.E, 4),
+	new Note(PITCH.G, 4)
 );
 
 // user input:
@@ -61,7 +60,8 @@ key = 'maggie_htn';
 secret = 'ineedsleep2021';
 token = '6b1ca8fa98008b1c379ea974f4d4db68';
 
-// get auth token
+// get auth token (only need to do once)
+/*
 fetch('https://api.hooktheory.com/v1/users/auth', {
 	method: 'POST',
 	headers: {
@@ -82,50 +82,71 @@ fetch('https://api.hooktheory.com/v1/users/auth', {
 	// log errors
 	console.log('something went wrong:', err);
 });
-
-
-// send an API request
-fetch('https://api.hooktheory.com/v1/trends/nodes?cp=4', {
-	method: 'GET',
-	headers: {
-		'Accept': 'application/json',
-		'Content-Type': 'application/json',
-		'Authorization': 'Bearer ' + token
-	}
-}).then(function (resp) {
-	// return response as JSON
-	return resp.json();
-}).then(function (data) {
-	// log API data
-	console.log(data);
-}).catch(function (err) {
-	// log errors
-	console.log('something went wrong:', err);
-});
+*/
 
 // async
 async function getNextChord() {
-	let response = await
+	let response = await 
+		fetch('https://api.hooktheory.com/v1/trends/nodes?cp=4', {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			}
+		});
 
-	fetch('https://api.hooktheory.com/v1/trends/nodes?cp=4', {
-		method: 'GET',
-		headers: {
-			'Accept': 'application/json',
-			'Content-Type': 'application/json',
-			'Authorization': 'Bearer ' + token
-		}
-	})
-
-	let data = await response.json()
+	let data = await response.json();
 	return data;
 }
 
-getNextChord().then(function (data) {console.log(data)})// output will be the required data
+getNextChord().then(function (data) {console.log(data)});
+
+async function getSong() {
+	let response = await 
+		fetch('https://api.hooktheory.com/v1/trends/songs?cp=4', {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			}
+		});
+
+	let data = await response.json();
+	return data;
+}
+
+getSong().then(function (data) {console.log(data)});
+
+
+
+function findChord(bar) {
+	/////
+}
 
 
 
 
 
+
+
+
+
+/*
+- find a chord that works for the bar
+
+- first, make an API call given the chord progression up to now
+- should give us a list of possible continuations
+- go down the list, check them against notes in the bar
+- make another list of the possible options
+
+- pick one based on the genre
+- pop song -> first, jazz -> second or third 
+
+- append to sequence of chords we have
+- store in array (size is number of bars)
+*/
 
 
 

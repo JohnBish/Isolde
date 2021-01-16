@@ -12,13 +12,19 @@ const PITCH = {
 	A : 9,
 	ASH : 10, BFL : 10,
 	B : 11, CFL : 11,
-	BSH : 12 // note: B# = C but we use 12 here
+	BSH : 0
 };
 
 class Note {
 	constructor(letter, octave) {
 		this.letter = letter; // PITCH
 		this.octave = octave; // int
+	}
+
+	// methods
+	diff(tonic) {
+		let semitones = (this.octave * 12 + this.letter) - (tonic.octave * 12 + tonic.letter);
+		return semitones % 12;
 	}
 }
 
@@ -50,8 +56,82 @@ sample_chord = new Chord(
 
 var numBars = 0; // TODO
 
+var key = new Key(PITCH.C, '+'); // TODO
+
 // array of bars, where each bar is an array of Notes
 var bars = []; // TODO
+
+var majDict = {
+	0 : 'I',
+	1 : 'bII',
+	2 : 'ii',
+	3 : 'bIII',
+	4 : 'iii',
+	5 : 'IV',
+	6 : 'bV',
+	7 : 'V',
+	8 : 'bVI',
+	9 : 'vi',
+	10 : 'bVII',
+	11 : 'vii',
+	12 : 'bvii'
+};
+
+// bar: array of Notes, tonic: a Note
+function findChord(bar, tonic) {
+
+	let dict = {};
+
+	// get notes relative to the key
+	for (i = 0; i < bar.length; ++i) {
+		let numSemi = bar[i].diff(tonic);
+
+		let degree = majDict[diff(note, tonic) % 12];
+	}
+
+	// for each chord relative to the tonic
+	// we have a constant array of notes that are members of that chord (14)
+	// include possible decorations
+
+	// for each note in the bar:
+	// figure out truthiness of if the note is in the chord in question, 1 or 0
+	// multiply the truthiness by fraction of bar note duration is for
+	// end up with a value between 0 and 1, if all notes in the bar match the chord, it'll be 1
+
+	// look at notes in the bar, check against all 7 arrays
+	// make an array for all matches
+	// make an array for most matches (backup)
+
+
+	// independently, make a call to the API, based on the sequence of chords we have
+	// compare
+
+
+
+	// check if all scale degrees fit into a chord
+	// array of possible chords
+	
+}
+
+
+/*
+- find a chord that works for the bar
+
+- first, make an API call given the chord progression up to now
+- should give us a list of possible continuations
+- go down the list, check them against notes in the bar
+- make another list of the possible options
+
+- pick one based on the genre
+- pop song -> first, jazz -> second or third 
+
+- append to sequence of chords we have
+- store in array (size is number of bars)
+*/
+
+
+
+
 
 ///////////////////////////////////// API //////////////////////////////////////
 
@@ -118,38 +198,3 @@ async function getSong() {
 }
 
 getSong().then(function (data) {console.log(data)});
-
-
-
-function findChord(bar) {
-	/////
-}
-
-
-
-
-
-
-
-
-
-/*
-- find a chord that works for the bar
-
-- first, make an API call given the chord progression up to now
-- should give us a list of possible continuations
-- go down the list, check them against notes in the bar
-- make another list of the possible options
-
-- pick one based on the genre
-- pop song -> first, jazz -> second or third 
-
-- append to sequence of chords we have
-- store in array (size is number of bars)
-*/
-
-
-
-
-
-

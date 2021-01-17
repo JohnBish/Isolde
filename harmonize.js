@@ -1,5 +1,6 @@
 // create pitch enum
 const PITCH = {
+    CFL : -1,
 	C : 0,
 	CSH : 1, DFL : 1,
 	D : 2,

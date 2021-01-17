@@ -3,7 +3,36 @@ const MIN_NOTE_DURATION = 100;
 var voice = new Wad({
     source: 'mic'
 });
+let polywad = new Wad.Poly({
+    recorder: {
+        options: { mimeType : 'audio/webm' },
+        onstop: function(event) {
+            console.log("hell yea m8")
+            let blob = new Blob(this.recorder.chunks, { 'type' : 'audio/webm;codecs=opus' });
+            $('#download-rec').prop('disabled', false);
+            $('#download-rec').click(e => {
+                window.open(URL.createObjectURL(blob));
+            });
+        }
+    }
+});
+polywad.add(voice);
+let polyharm = new Wad.Poly({
+    recorder: {
+        options: { mimeType : 'audio/webm' },
+        onstop: function(event) {
+            console.log("hell yea m8")
+            let blob = new Blob(this.recorder.chunks, { 'type' : 'audio/webm;codecs=opus' });
+            $('#download-harm').prop('disabled', false);
+            $('#download-harm').click(e => {
+                window.open(URL.createObjectURL(blob));
+            });
+        }
+    }
+});
+polywad.add(voice);
 var tone = new Wad(Wad.presets.piano);
+polyharm.add(tone);
 var click = new Wad(Wad.presets.snare);
 
 var abortRecording = false;
@@ -82,6 +111,8 @@ $(document).ready(() => {
     $('#tempo').val(60);
 
     $('#record').click(() => {
+        $('#download-rec').prop('disabled', true);
+        $('#download-harm').prop('disabled', true);
         var recordingStart;
         var sustainedNoteName;
         var sustainedNoteStart;
@@ -109,6 +140,7 @@ $(document).ready(() => {
         console.log(key);
 
         voice.play();
+        polywad.recorder.start();
         tuner.updatePitch();
 
         const beatDuration = 60000 / tempo;
@@ -180,7 +212,61 @@ $(document).ready(() => {
         logPitch();
     });
 
+    async function synthesizeAlberti(chords) {
+        numBars = $('#bars').val();
+        const bpb = $('#bpb').val();
+        const tempo = $('#tempo').val();
+
+        const beatDuration = 60000 / tempo;
+        barDuration = beatDuration * bpb;
+        recordingStart = new Date().getTime();
+        currentBarStart = recordingStart;
+
+        const noteDuration = beatDuration / 4;
+        const totalNotes = bpb * numBars * 4;
+        var noteCounter = 0;
+        var absoluteNotes = [];
+
+        for (const chord of chords.split(",")) {
+            for (i = 0; i < bpb; i++) {
+                var prevRelative = 0;
+                if (chord in MAJOR_RELATIVE_DIATONICS) {
+                    for (const relative of MAJOR_RELATIVE_DIATONICS[chord]) {
+                        const absolute = key.tonic + ((relative >= prevRelative) ? relative : relative + 12);
+                        absoluteNotes.push(absolute);
+                        prevRelative = relative;
+                    };
+                } else if (chord in MINOR_RELATIVE_DIATONICS) {
+                    for (const relative of MINOR_RELATIVE_DIATONICS[chord]) {
+                        const absolute = key.tonic + ((relative >= prevRelative) ? relative : relative + 12);
+                        absoluteNotes.push(absolute);
+                        prevRelative = relative;
+                    };
+                } else {
+                    console.log("DANGER DANGER DANGER NIGHTMARE NIGHTMARE NIGHTMARE");
+                }
+                absoluteNotes.push(absoluteNotes[absoluteNotes.length - 2]);
+            }
+        }
+
+        var currentTone = 0;
+        let playNext = async () => {
+            // tone.stop();
+            if (currentTone >= absoluteNotes.length) {
+                polyharm.recorder.stop();
+                return;
+            }
+            tone.play({pitch: LETTER_SHARPS_INV[absoluteNotes[currentTone] % 12] + 4});
+            currentTone ++;
+            await setTimeout(playNext, noteDuration);
+        }; 
+
+        polyharm.recorder.start();
+        await playNext();
+    }
+
     $('#abort').click(async () => {
+        polywad.recorder.stop();
         voice.stop();
 
         $('#abort').prop('disabled', true);
@@ -192,11 +278,11 @@ $(document).ready(() => {
 
         var chordsSoFar = '1';
         var numChordsSoFar = 1;
-        console.log(numBars);
         for (j = 1; j < numBars; j++) {
             chordsSoFar = await findChord(bars[j], numBars, key, chordsSoFar, numChordsSoFar);
-            console.log(chordsSoFar);
             numChordsSoFar ++;
         }
+
+        await synthesizeAlberti(chordsSoFar);
     });
 });

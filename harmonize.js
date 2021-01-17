@@ -143,7 +143,7 @@ async function findChord(bar, numBars, key, chordsSoFar, numChordsSoFar) {
 			}
 		}
 		console.log("force resolution chordsSoFar", chordsSoFar);
-		return;
+		return chordsSoFar;
 	}
 
 	// get possible next chords from API

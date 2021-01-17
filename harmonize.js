@@ -80,8 +80,12 @@ async function getNextChord(chords) {
 			}
 		});
 
-	let data = await response.json();
-	return data;
+    try {
+        let data = await response.json();
+        return data;
+    } catch(e) {
+        return [];
+    }
 }
 
 // bar: array of Notes, key: a Key
@@ -89,6 +93,7 @@ async function getNextChord(chords) {
 async function findChord(bar, numBars, key, chordsSoFar, numChordsSoFar) {
     const tonic = new Note(key.tonic, 4, 1);
 	var chordMatchWeights = {};
+    var bestChord = '5';
 
 	for (i = 0; i < bar.length; ++i) {
         const note = bar[i];
@@ -106,20 +111,29 @@ async function findChord(bar, numBars, key, chordsSoFar, numChordsSoFar) {
                     chordMatchWeights[chord] += weight;
                 }
             }
+
+            var bestWeight = 0;
+            for (let chord in chordSet) {
+                if (chordMatchWeights[chord] > bestWeight) {
+                    bestWeight = chordMatchWeights[chord];
+                    bestChord = chord;
+                }
+            }
         }
 
         // find list of chords that work
-        if (key.sign === Key.MAJOR) {
+        if (key.sign == Key.MAJOR) {
             findMatchWeights(MAJOR_RELATIVE_DIATONICS);
         } else {
             findMatchWeights(MINOR_RELATIVE_DIATONICS);
         }
 	}
+    
+    console.log('bestChord', bestChord);
 
 	//console.log('chordMatchWeights', chordMatchWeights);
-
+    
 	var possibleChords = {};
-	var bestChord = '5';
 	var largestWeightProbSoFar = 0;
 	let lastChord = chordsSoFar.charAt(chordsSoFar.length - 1);
 
@@ -146,9 +160,11 @@ async function findChord(bar, numBars, key, chordsSoFar, numChordsSoFar) {
 		return chordsSoFar;
 	}
 
+    console.log("foo");
 	// get possible next chords from API
 	await getNextChord(chordsSoFar).then(function(data) {
-		//console.log('apiData', data);
+        console.log("bar");
+		// console.log('apiData', data);
 
 		for (i = 0; i < data.length; ++i) {
 			const chordID = data[i].chord_ID;

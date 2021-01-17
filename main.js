@@ -3,26 +3,31 @@ const MIN_NOTE_DURATION = 100;
 var voice = new Wad({
     source: 'mic'
 });
-let polywad = new Wad.Poly({
+var pitch = new Wad({
+    source: 'mic'
+});
+var recording;
+var polywad = new Wad.Poly({
     recorder: {
         options: { mimeType : 'audio/webm' },
         onstop: function(event) {
-            console.log("hell yea m8")
             let blob = new Blob(this.recorder.chunks, { 'type' : 'audio/webm;codecs=opus' });
             $('#download-rec').prop('disabled', false);
             $('#download-rec').click(e => {
                 window.open(URL.createObjectURL(blob));
+                recording = new Wad({source:URL.createObjectURL(blob)});
+                console.log(recording);
             });
         }
     }
 });
 polywad.add(voice);
-let polyharm = new Wad.Poly({
+var polyharm = new Wad.Poly({
     recorder: {
         options: { mimeType : 'audio/webm' },
         onstop: function(event) {
-            console.log("hell yea m8")
             let blob = new Blob(this.recorder.chunks, { 'type' : 'audio/webm;codecs=opus' });
+            console.log(blob);
             $('#download-harm').prop('disabled', false);
             $('#download-harm').click(e => {
                 window.open(URL.createObjectURL(blob));
@@ -30,7 +35,6 @@ let polyharm = new Wad.Poly({
         }
     }
 });
-polywad.add(voice);
 var tone = new Wad(Wad.presets.piano);
 polyharm.add(tone);
 var click = new Wad(Wad.presets.snare);
@@ -131,7 +135,7 @@ $(document).ready(() => {
 
         var tuner = new Wad.Poly();
         tuner.setVolume(0);
-        tuner.add(voice);
+        tuner.add(pitch);
  
         numBars = $('#bars').val();
         const bpb = $('#bpb').val();
@@ -140,6 +144,7 @@ $(document).ready(() => {
         console.log(key);
 
         voice.play();
+        pitch.play();
         polywad.recorder.start();
         tuner.updatePitch();
 
@@ -268,6 +273,7 @@ $(document).ready(() => {
     $('#abort').click(async () => {
         polywad.recorder.stop();
         voice.stop();
+        pitch.stop();
 
         $('#abort').prop('disabled', true);
         $('#record').prop('disabled', false);

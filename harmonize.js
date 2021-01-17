@@ -1,3 +1,8 @@
+// hooktheory API credentials
+const key = 'maggie_htn';
+const secret = 'ineedsleep2021';
+const token = '6b1ca8fa98008b1c379ea974f4d4db68';
+
 // create pitch enum
 const PITCH = {
     CFL : -1,
@@ -17,24 +22,24 @@ const PITCH = {
 };
 
 const MAJOR_RELATIVE_DIATONICS = {
-	'I': [0, 4, 7],
-	'ii': [2, 5, 9],
-	'iii': [4, 7, 11],
-	'IV': [5, 9, 0],
-	'V': [7, 11, 2],
-	'vi': [9, 0, 4],
-    'dvii': [11, 2, 5]
+	'1': [0, 4, 7], // I
+	'2': [2, 5, 9], // ii
+	'3': [4, 7, 11], // iii
+	'4': [5, 9, 0], // IV
+	'5': [7, 11, 2], // V
+	'6': [9, 0, 4], // VI
+    '7': [11, 2, 5] // dvii
 };
 
 const MINOR_RELATIVE_DIATONICS = {
-	'i': [0, 3, 7],
-	'dii': [2, 5, 8],
-	'III': [4, 8, 11],
-	'iv': [5, 8, 0],
-	'v': [7, 10, 2],
-    'V': [7, 11, 2],
-	'VI': [8, 0, 3],
-    'VII': [10, 2, 5]
+	'b1': [0, 3, 7], // i
+	'b2': [2, 5, 8], // dii
+	'b3': [4, 8, 11], // bIII
+	'b4': [5, 8, 0], // iv
+	'b5': [7, 10, 2], // v
+    '5': [7, 11, 2], // V
+	'b6': [8, 0, 3], // bVI
+    'b7': [10, 2, 5] // bVII
 };
 
 class Note {
@@ -61,117 +66,6 @@ class Key {
 	}
 }
 
-// user input:
-// audio file, number of bars (int), key (letter and sign) (enum)
-// first chord in the piece (different enum)
-
-var numBars = 0; // TODO
-
-// array of bars, where each bar is an array of Notes
-var bars = []; // TODO
-
-var chordsSoFar = '1';
-
-// bar: array of Notes, key: a Key
-function findChord(bar, key) {
-    const tonic = new Note(key.tonic, 4, 1);
-	var chordMatchWeights = {};
-
-	for (i = 0; i < bar.length; ++i) {
-        const note = bar[i];
-		const relative_note = note.diff(tonic);
-		//console.log("note is:", note);
-
-		// find match weights 
-        let findMatchWeights = chordSet => {
-            for (let chord in chordSet) {
-                const weight = chordSet[chord].includes(relative_note) ? note.duration : 0;
-
-                if (chordMatchWeights[chord] == null) {
-                    chordMatchWeights[chord] = weight;
-                } else {
-                    chordMatchWeights[chord] += weight;
-                }
-            }
-        }
-
-        // find list of chords that work
-        if (key.sign === Key.MAJOR) {
-            findMatchWeights(MAJOR_RELATIVE_DIATONICS);
-        } else {
-            findMatchWeights(MINOR_RELATIVE_DIATONICS);
-        }
-	}
-
-	// make API call
-
-	
-	// find list of chords, compare
-
-	// check if all scale degrees fit into a chord
-	// array of possible chords
-
-	return chordMatchWeights;
-}
-
-var myBar = [
-	new Note(PITCH.C, 4, 0.25),
-	new Note(PITCH.E, 4, 0.25),
-	new Note(PITCH.G, 4, 0.25)
-];
-
-var myKey = new Key(PITCH.C, Key.MAJOR);
-
-var result = findChord(myBar, myKey);
-console.log("result is: ", result);
-
-
-/*
-- find a chord that works for the bar
-
-- first, make an API call given the chord progression up to now
-- should give us a list of possible continuations
-- go down the list, check them against notes in the bar
-- make another list of the possible options
-
-- pick one based on the genre
-- pop song -> first, jazz -> second or third 
-
-- append to sequence of chords we have
-- store in array (size is number of bars)
-*/
-
-///////////////////////////////////// API //////////////////////////////////////
-
-
-key = 'maggie_htn';
-secret = 'ineedsleep2021';
-token = '6b1ca8fa98008b1c379ea974f4d4db68';
-
-// get auth token (only need to do once)
-/*
-fetch('https://api.hooktheory.com/v1/users/auth', {
-	method: 'POST',
-	headers: {
-		'Accept': 'application/json',
-		'Content-Type': 'application/json'
-	},
-	body: JSON.stringify({
-		username: key,
-		password: secret
-	})
-}).then(function (resp) {
-	// return response as JSON
-	return resp.json();
-}).then(function (data) {
-	// log API data
-	console.log('token', data);
-}).catch(function (err) {
-	// log errors
-	console.log('something went wrong:', err);
-});
-*/
-
 // async, chords is a string of nums, separated by commas, i.e. '1,4,5'
 async function getNextChord(chords) {
 	let url = 'https://api.hooktheory.com/v1/trends/nodes?cp=' + chords;
@@ -190,7 +84,131 @@ async function getNextChord(chords) {
 	return data;
 }
 
-getNextChord(chordsSoFar).then(function (data) {console.log(data)});
+var chordsSoFar = '5'; // TODO may not be 1
+var bars = 4; // TODO this is user input
+var numChordsSoFar = 1;
+
+// bar: array of Notes, key: a Key
+// findChord finds the best possible chord for the bar
+function findChord(bar, key) {
+    const tonic = new Note(key.tonic, 4, 1);
+	var chordMatchWeights = {};
+
+	for (i = 0; i < bar.length; ++i) {
+        const note = bar[i];
+		const relativeNote = note.diff(tonic);
+		//console.log("note is:", note);
+
+		// find match weights 
+        let findMatchWeights = chordSet => {
+            for (let chord in chordSet) {
+                const weight = chordSet[chord].includes(relativeNote) ? note.duration : 0;
+
+                if (chordMatchWeights[chord] == null) {
+                    chordMatchWeights[chord] = weight;
+                } else {
+                    chordMatchWeights[chord] += weight;
+                }
+            }
+        }
+
+        // find list of chords that work
+        if (key.sign === Key.MAJOR) {
+            findMatchWeights(MAJOR_RELATIVE_DIATONICS);
+        } else {
+            findMatchWeights(MINOR_RELATIVE_DIATONICS);
+        }
+	}
+
+	//console.log('chordMatchWeights', chordMatchWeights);
+
+	var possibleChords = {};
+	var bestChord = '';
+	var largestWeightProbSoFar = 0;
+	let lastChord = chordsSoFar.charAt(chordsSoFar.length - 1);
+
+	console.log("lastChord", lastChord);
+
+	// if we're at the second last bar, we want to force a V-I resolution
+	if (numChordsSoFar + 1 === bars) {
+		// if we already have a V chord, append a I
+		if (lastChord === '5') {
+			if (key.sign === Key.MAJOR) {
+				chordsSoFar += ',1';
+			} else {
+				chordsSoFar += ',b1'
+			}
+		} else {
+			// otherwise, append a V-I
+			if (key.sign === Key.MAJOR) {
+				chordsSoFar += ',5,1';
+			} else {
+				chordsSoFar += ',5,b1'
+			}
+		}
+		console.log("force resolution chordsSoFar", chordsSoFar);
+		return;
+	}
+
+	// get possible next chords from API
+	getNextChord(chordsSoFar).then(function(data) {
+		//console.log('apiData', data);
+
+		for (i = 0; i < data.length; ++i) {
+			const chordID = data[i].chord_ID;
+			const chordWeight = chordMatchWeights[chordID];
+
+			// find best chord based on the chord weight and API probability
+			if (chordWeight) {
+				let finalWeightProb = (0.75 * chordWeight) + (0.25 * data[i].probability);
+
+				if (finalWeightProb > largestWeightProbSoFar) {
+					// if chord is not a 1, just add it
+					if ((chordID != '1') && (chordID != 'b1')) {
+							largestWeightProbSoFar = finalWeightProb;
+							bestChord = chordID;
+					} else {
+						// if the chord is a 1 and the previous chord is not a 5, just add it
+						if (lastChord != '5') {
+							largestWeightProbSoFar = finalWeightProb;
+							bestChord = chordID;
+						} else {
+							// prevent a V-I or V-i or v-i in the middle
+						}
+					}
+				}
+				possibleChords[chordID] = finalWeightProb;
+			}
+		}
+
+		console.log('possibleChords', possibleChords);
+
+		// append next chord to sequence of chords we have
+		chordsSoFar += ',' + bestChord;
+		// increment the number of bars we've found a chord for
+		numChordsSoFar += 1;
+
+		console.log("chordsSoFar", chordsSoFar);
+	});
+}
+
+var myBar = [
+	new Note(PITCH.C, 4, 1),
+	new Note(PITCH.E, 4, 0.25),
+	new Note(PITCH.G, 4, 0.5)
+];
+
+var myKey = new Key(PITCH.C, Key.MAJOR);
+
+// find the next chord
+findChord(myBar, myKey);
+
+////////////////////////////////// API getSong ///////////////////////////////// 
+
+// need to find a song
+// need to combine song with input
+// need to finish ui
+// need to craft 3 minute pitch
 
 async function getSong() {
 	let response = await 
@@ -207,4 +225,4 @@ async function getSong() {
 	return data;
 }
 
-getSong().then(function (data) {console.log(data)});
+//getSong().then(function(data) {console.log(data)});

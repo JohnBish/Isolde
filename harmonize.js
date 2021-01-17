@@ -15,10 +15,32 @@ const PITCH = {
 	BSH : 0
 };
 
+var MAJOR_RELATIVE_DIATONICS = {
+	'I': [0, 4, 7],
+	'ii': [2, 5, 9],
+	'iii': [4, 7, 11],
+	'IV': [5, 9, 0],
+	'V': [7, 11, 2],
+	'vi': [9, 0, 4],
+    'dvii': [11, 2, 5]
+};
+
+var MINOR_RELATIVE_DIATONICS = {
+	'i': [0, 3, 7],
+	'dii': [2, 5, 8],
+	'III': [4, 8, 11],
+	'iv': [5, 8, 0],
+	'v': [7, 10, 2],
+    'V': [7, 11, 2],
+	'VI': [8, 0, 3],
+    'VII': [10, 2, 5],
+};
+
 class Note {
-	constructor(letter, octave) {
+	constructor(letter, octave, duration) {
 		this.letter = letter; // PITCH
 		this.octave = octave; // int
+        this.duration = duration; // float between 0 and 1 (1 is a whole note)
 	}
 
 	// methods
@@ -29,26 +51,14 @@ class Note {
 }
 
 class Key {
+    const MAJOR = true;
+    const MINOR = false;
+
 	constructor(letter, sign) {
-		this.letter = letter; // PITCH
-		this.sign = sign; // char
+		this.tonic = letter; // PITCH
+		this.sign = sign; // Key.MAJOR or Key.MINOR
 	}
 }
-
-class Chord {
-	constructor(note1, note2, note3) {
-		this.note1 = note1;
-		this.note2 = note2;
-		this.note3 = note3;
-	}
-}
-
-// a chord example using our class definitions
-sample_chord = new Chord(
-	new Note(PITCH.C, 4),
-	new Note(PITCH.E, 4),
-	new Note(PITCH.G, 4)
-);
 
 // user input:
 // audio file, number of bars (int), key (letter and sign) (enum)
@@ -77,16 +87,32 @@ var majDict = {
 	12 : 'bvii'
 };
 
-// bar: array of Notes, tonic: a Note
-function findChord(bar, tonic) {
+// bar: array of Notes, key: a Key
+function findChord(bar, key) {
+    const tonic = key.tonic;
 
-	let dict = {};
+	var chordMatchWeights = {};
 
-	// get notes relative to the key
 	for (i = 0; i < bar.length; ++i) {
-		let numSemi = bar[i].diff(tonic);
+        const note = bar[i]
+		const relative_note = diff(note, tonic) % 12;
 
-		let degree = majDict[diff(note, tonic) % 12];
+        let findMatchWeights = chordSet => {
+            for (let chord in chordSet) {
+                const weight = chordSet[chord].includes(degree) ? note.duration : 0;
+                if (chordMatchWeights[chord] == null) {
+                    chordMatchWeights[chord] = weight;
+                } else {
+                    chordMatchWeights[chord] += weight;
+                }
+            }
+        }
+
+        if (key.sign == Key.MAJOR) {
+            findMatchWeights(MAJOR_RELATIVE_DIATONICS);
+        } else {
+            findMatchWeights(MINOR_RELATIVE_DIATONICS);
+        }
 	}
 
 	// for each chord relative to the tonic

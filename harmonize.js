@@ -113,10 +113,27 @@ async function findChord(bar, numBars, key, chordsSoFar, numChordsSoFar) {
             }
 
             var bestWeight = 0;
-            for (let chord in chordSet) {
-                if (chordMatchWeights[chord] > bestWeight) {
-                    bestWeight = chordMatchWeights[chord];
-                    bestChord = chord;
+            if (numBars - numChordsSoFar == 1) {
+                bestChord = key.sign ? "1" : "b1";
+            } else if (numBars - numChordsSoFar == 2) {
+                IVWeight = chordMatchWeights["4"];
+                VWeight = chordMatchWeights["5"];
+                vWeight = key.sign ? 0 : chordMatchWeights["d5"];
+
+                if (vWeight > VWeight && vWeight > IVWeight) {
+                    bestChord = "d5";
+                }
+                if (IVWeight > VWeight && IVWeight > vWeight) {
+                    bestChord = "4";
+                } else {
+                    bestChord = "5";
+                }
+            } else {
+                for (let chord in chordSet) {
+                    if (chordMatchWeights[chord] > bestWeight) {
+                        bestWeight = chordMatchWeights[chord];
+                        bestChord = chord;
+                    }
                 }
             }
         }

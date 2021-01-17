@@ -282,7 +282,7 @@ $(document).ready(() => {
         abortRecording = true;
         console.log(bars);
 
-        var chordsSoFar = '1';
+        var chordsSoFar = key.sign ? '1' : 'd1';
         var numChordsSoFar = 1;
         for (j = 1; j < numBars; j++) {
             chordsSoFar = await findChord(bars[j], numBars, key, chordsSoFar, numChordsSoFar);

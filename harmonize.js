@@ -33,7 +33,7 @@ const MINOR_RELATIVE_DIATONICS = {
 	'v': [7, 10, 2],
     'V': [7, 11, 2],
 	'VI': [8, 0, 3],
-    'VII': [10, 2, 5],
+    'VII': [10, 2, 5]
 };
 
 class Note {
@@ -51,8 +51,8 @@ class Note {
 }
 
 class Key {
-    const MAJOR = true;
-    const MINOR = false;
+    MAJOR = true;
+    MINOR = false;
 
 	constructor(letter, sign) {
 		this.tonic = letter; // PITCH
@@ -69,20 +69,24 @@ var numBars = 0; // TODO
 // array of bars, where each bar is an array of Notes
 var bars = []; // TODO
 
+var chordsSoFar = '1';
+
 // bar: array of Notes, key: a Key
 function findChord(bar, key) {
-    const tonic = key.tonic;
-
+    const tonic = new Note(key.tonic, 4, 1);
 	var chordMatchWeights = {};
 
 	for (i = 0; i < bar.length; ++i) {
-        const note = bar[i]
+        const note = bar[i];
 		const relative_note = note.diff(tonic);
+		//console.log("note is:", note);
 
+		// find match weights 
         let findMatchWeights = chordSet => {
             for (let chord in chordSet) {
                 const weight = chordSet[chord].includes(relative_note) ? note.duration : 0;
-                if (chordMatchWeights[chord] === null) {
+
+                if (chordMatchWeights[chord] == null) {
                     chordMatchWeights[chord] = weight;
                 } else {
                     chordMatchWeights[chord] += weight;
@@ -90,7 +94,7 @@ function findChord(bar, key) {
             }
         }
 
-        // 
+        // find list of chords that work
         if (key.sign === Key.MAJOR) {
             findMatchWeights(MAJOR_RELATIVE_DIATONICS);
         } else {
@@ -98,15 +102,27 @@ function findChord(bar, key) {
         }
 	}
 
-	// independently, make a call to the API, based on the sequence of chords we have
-	// compare
+	// make API call
 
-
+	
+	// find list of chords, compare
 
 	// check if all scale degrees fit into a chord
 	// array of possible chords
-	
+
+	return chordMatchWeights;
 }
+
+var myBar = [
+	new Note(PITCH.C, 4, 0.25),
+	new Note(PITCH.E, 4, 0.25),
+	new Note(PITCH.G, 4, 0.25)
+];
+
+var myKey = new Key(PITCH.C, Key.MAJOR);
+
+var result = findChord(myBar, myKey);
+console.log("result is: ", result);
 
 
 /*
@@ -122,23 +138,6 @@ function findChord(bar, key) {
 
 - append to sequence of chords we have
 - store in array (size is number of bars)
-
-var majDict = {
-	0 : 'I',
-	1 : 'bII',
-	2 : 'ii',
-	3 : 'bIII',
-	4 : 'iii',
-	5 : 'IV',
-	6 : 'bV',
-	7 : 'V',
-	8 : 'bVI',
-	9 : 'vi',
-	10 : 'bVII',
-	11 : 'vii',
-	12 : 'bvii'
-};
-
 */
 
 ///////////////////////////////////// API //////////////////////////////////////
@@ -172,10 +171,12 @@ fetch('https://api.hooktheory.com/v1/users/auth', {
 });
 */
 
-// async
-async function getNextChord() {
+// async, chords is a string of nums, separated by commas, i.e. '1,4,5'
+async function getNextChord(chords) {
+	let url = 'https://api.hooktheory.com/v1/trends/nodes?cp=' + chords;
+
 	let response = await 
-		fetch('https://api.hooktheory.com/v1/trends/nodes?cp=4', {
+		fetch(url, {
 			method: 'GET',
 			headers: {
 				'Accept': 'application/json',
@@ -188,7 +189,7 @@ async function getNextChord() {
 	return data;
 }
 
-getNextChord().then(function (data) {console.log(data)});
+getNextChord(chordsSoFar).then(function (data) {console.log(data)});
 
 async function getSong() {
 	let response = await 

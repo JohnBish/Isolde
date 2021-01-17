@@ -5,6 +5,7 @@ const token = '6b1ca8fa98008b1c379ea974f4d4db68';
 
 // create pitch enum
 const PITCH = {
+    CFL : -1,
 	C : 0,
 	CSH : 1, DFL : 1,
 	D : 2,
@@ -191,6 +192,7 @@ function findChord(bar, key) {
 	});
 }
 
+/*
 var myBar = [
 	new Note(PITCH.C, 4, 1),
 	new Note(PITCH.E, 4, 0.25),
@@ -201,27 +203,4 @@ var myKey = new Key(PITCH.C, Key.MAJOR);
 
 // find the next chord
 findChord(myBar, myKey);
-
-////////////////////////////////// API getSong ///////////////////////////////// 
-
-// need to find a song
-// need to combine song with input
-// need to finish ui
-// need to craft 3 minute pitch
-
-async function getSong() {
-	let response = await 
-		fetch('https://api.hooktheory.com/v1/trends/songs?cp=4', {
-			method: 'GET',
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json',
-				'Authorization': 'Bearer ' + token
-			}
-		});
-
-	let data = await response.json();
-	return data;
-}
-
-//getSong().then(function(data) {console.log(data)});
+*/

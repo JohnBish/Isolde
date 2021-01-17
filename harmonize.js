@@ -1,5 +1,5 @@
 // hooktheory API credentials
-const key = 'maggie_htn';
+const hkey = 'maggie_htn';
 const secret = 'ineedsleep2021';
 const token = '6b1ca8fa98008b1c379ea974f4d4db68';
 
@@ -84,13 +84,9 @@ async function getNextChord(chords) {
 	return data;
 }
 
-var chordsSoFar = '5'; // TODO may not be 1
-var bars = 4; // TODO this is user input
-var numChordsSoFar = 1;
-
 // bar: array of Notes, key: a Key
 // findChord finds the best possible chord for the bar
-function findChord(bar, key) {
+async function findChord(bar, numBars, key, chordsSoFar, numChordsSoFar) {
     const tonic = new Note(key.tonic, 4, 1);
 	var chordMatchWeights = {};
 
@@ -123,14 +119,14 @@ function findChord(bar, key) {
 	//console.log('chordMatchWeights', chordMatchWeights);
 
 	var possibleChords = {};
-	var bestChord = '';
+	var bestChord = '5';
 	var largestWeightProbSoFar = 0;
 	let lastChord = chordsSoFar.charAt(chordsSoFar.length - 1);
 
 	console.log("lastChord", lastChord);
 
 	// if we're at the second last bar, we want to force a V-I resolution
-	if (numChordsSoFar + 1 === bars) {
+	if (numChordsSoFar + 1 === numBars) {
 		// if we already have a V chord, append a I
 		if (lastChord === '5') {
 			if (key.sign === Key.MAJOR) {
@@ -151,7 +147,7 @@ function findChord(bar, key) {
 	}
 
 	// get possible next chords from API
-	getNextChord(chordsSoFar).then(function(data) {
+	await getNextChord(chordsSoFar).then(function(data) {
 		//console.log('apiData', data);
 
 		for (i = 0; i < data.length; ++i) {
@@ -186,10 +182,10 @@ function findChord(bar, key) {
 		// append next chord to sequence of chords we have
 		chordsSoFar += ',' + bestChord;
 		// increment the number of bars we've found a chord for
-		numChordsSoFar += 1;
 
 		console.log("chordsSoFar", chordsSoFar);
 	});
+    return chordsSoFar;
 }
 
 /*

@@ -8,6 +8,8 @@ var click = new Wad(Wad.presets.snare);
 
 var abortRecording = false;
 var bars = [];
+var key;
+var numBars;
 
 const LETTER_SHARPS = {
     "C": 0,
@@ -24,6 +26,36 @@ const LETTER_SHARPS = {
     "B": 11
 };
 
+const LETTER_SHARPS_INV = {
+    0: "C",
+    1: "C#",
+    2: "D",
+    3: "D#",
+    4: "E",
+    5: "F",
+    6: "F#",
+    7: "G",
+    8: "G#",
+    9: "A",
+    10: "A#",
+    11: "B"
+};
+
+const UNSIGNED_KEY_NAMES = {
+    "C": 0,
+    "C sharp / D flat": 1,
+    "D": 2,
+    "D sharp / E flat": 3,
+    "E": 4,
+    "F": 5,
+    "F sharp / G flat": 6,
+    "G": 7,
+    "G sharp / A flat": 8,
+    "A": 9,
+    "A sharp / B flat": 10,
+    "B / C flat": 11
+}
+
 function getNote(noteName) {
     const octave = parseInt(noteName.slice(-1));
     const letter = LETTER_SHARPS[noteName.slice(0, -1)];
@@ -32,6 +64,11 @@ function getNote(noteName) {
 }
 
 $(document).ready(() => {
+    for (let k in UNSIGNED_KEY_NAMES) {
+        $('#letter').append($('<option></option>').val(UNSIGNED_KEY_NAMES[k]).html(k));
+    }
+    $('#sign').append($('<option></option>').val(true).html('Major'));
+    $('#sign').append($('<option></option>').val(false).html('minor'));
     for (i = 1; i <= 16; i++) {
         $('#bars').append($('<option></option>').val(i).html(i));
     }
@@ -65,9 +102,11 @@ $(document).ready(() => {
         tuner.setVolume(0);
         tuner.add(voice);
  
-        const numBars = $('#bars').val();
+        numBars = $('#bars').val();
         const bpb = $('#bpb').val();
         const tempo = $('#tempo').val();
+        key = new Key(parseInt($('#letter').val()), $('#sign').val() == "true");
+        console.log(key);
 
         voice.play();
         tuner.updatePitch();
@@ -77,7 +116,7 @@ $(document).ready(() => {
         currentBar = 0;
         recordingStart = new Date().getTime();
         currentBarStart = recordingStart;
-        sustainedNoteStart = recordingStart;
+        sustainedNoteStart = recordingStart + barDuration;
         clickTrackCounter = 1;
         currentBeatStart = recordingStart;
 
@@ -94,7 +133,9 @@ $(document).ready(() => {
                     if (tuner.noteName != sustainedNoteName) {
                         const note = getNote(tuner.noteName);
                         sustainedNoteName = tuner.noteName;
-                        if (new Date().getTime() - sustainedNoteStart >= MIN_NOTE_DURATION) {
+                        const noteDuration = new Date().getTime() - sustainedNoteStart;
+                        note.duration = noteDuration / barDuration;
+                        if (noteDuration >= MIN_NOTE_DURATION) {
                             bar.push(note);
                             sustainedNoteStart = new Date().getTime();
                             console.log(note);
@@ -107,7 +148,7 @@ $(document).ready(() => {
             const now = new Date().getTime();
             if (now - currentBeatStart >= beatDuration) {
                  if (clickTrackCounter < bpb) {
-                    tone.play();
+                    tone.play({pitch: LETTER_SHARPS_INV[$('#letter').val()] + 4});
                     tone.stop();
                 } else {
                     click.play();
@@ -134,12 +175,12 @@ $(document).ready(() => {
             requestAnimationFrame(logPitch);
         };
 
-        tone.play();
+        tone.play({pitch: LETTER_SHARPS_INV[$('#letter').val()] + 4});
         tone.stop();
         logPitch();
     });
 
-    $('#abort').click(() => {
+    $('#abort').click(async () => {
         voice.stop();
 
         $('#abort').prop('disabled', true);
@@ -148,5 +189,14 @@ $(document).ready(() => {
 
         abortRecording = true;
         console.log(bars);
+
+        var chordsSoFar = '1';
+        var numChordsSoFar = 1;
+        console.log(numBars);
+        for (j = 1; j < numBars; j++) {
+            chordsSoFar = await findChord(bars[j], numBars, key, chordsSoFar, numChordsSoFar);
+            console.log(chordsSoFar);
+            numChordsSoFar ++;
+        }
     });
 });

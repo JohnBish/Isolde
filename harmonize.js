@@ -15,7 +15,7 @@ const PITCH = {
 	BSH : 0
 };
 
-var MAJOR_RELATIVE_DIATONICS = {
+const MAJOR_RELATIVE_DIATONICS = {
 	'I': [0, 4, 7],
 	'ii': [2, 5, 9],
 	'iii': [4, 7, 11],
@@ -25,7 +25,7 @@ var MAJOR_RELATIVE_DIATONICS = {
     'dvii': [11, 2, 5]
 };
 
-var MINOR_RELATIVE_DIATONICS = {
+const MINOR_RELATIVE_DIATONICS = {
 	'i': [0, 3, 7],
 	'dii': [2, 5, 8],
 	'III': [4, 8, 11],
@@ -66,26 +66,8 @@ class Key {
 
 var numBars = 0; // TODO
 
-var key = new Key(PITCH.C, '+'); // TODO
-
 // array of bars, where each bar is an array of Notes
 var bars = []; // TODO
-
-var majDict = {
-	0 : 'I',
-	1 : 'bII',
-	2 : 'ii',
-	3 : 'bIII',
-	4 : 'iii',
-	5 : 'IV',
-	6 : 'bV',
-	7 : 'V',
-	8 : 'bVI',
-	9 : 'vi',
-	10 : 'bVII',
-	11 : 'vii',
-	12 : 'bvii'
-};
 
 // bar: array of Notes, key: a Key
 function findChord(bar, key) {
@@ -95,12 +77,12 @@ function findChord(bar, key) {
 
 	for (i = 0; i < bar.length; ++i) {
         const note = bar[i]
-		const relative_note = diff(note, tonic) % 12;
+		const relative_note = note.diff(tonic);
 
         let findMatchWeights = chordSet => {
             for (let chord in chordSet) {
-                const weight = chordSet[chord].includes(degree) ? note.duration : 0;
-                if (chordMatchWeights[chord] == null) {
+                const weight = chordSet[chord].includes(relative_note) ? note.duration : 0;
+                if (chordMatchWeights[chord] === null) {
                     chordMatchWeights[chord] = weight;
                 } else {
                     chordMatchWeights[chord] += weight;
@@ -108,26 +90,13 @@ function findChord(bar, key) {
             }
         }
 
-        if (key.sign == Key.MAJOR) {
+        // 
+        if (key.sign === Key.MAJOR) {
             findMatchWeights(MAJOR_RELATIVE_DIATONICS);
         } else {
             findMatchWeights(MINOR_RELATIVE_DIATONICS);
         }
 	}
-
-	// for each chord relative to the tonic
-	// we have a constant array of notes that are members of that chord (14)
-	// include possible decorations
-
-	// for each note in the bar:
-	// figure out truthiness of if the note is in the chord in question, 1 or 0
-	// multiply the truthiness by fraction of bar note duration is for
-	// end up with a value between 0 and 1, if all notes in the bar match the chord, it'll be 1
-
-	// look at notes in the bar, check against all 7 arrays
-	// make an array for all matches
-	// make an array for most matches (backup)
-
 
 	// independently, make a call to the API, based on the sequence of chords we have
 	// compare
@@ -153,11 +122,24 @@ function findChord(bar, key) {
 
 - append to sequence of chords we have
 - store in array (size is number of bars)
+
+var majDict = {
+	0 : 'I',
+	1 : 'bII',
+	2 : 'ii',
+	3 : 'bIII',
+	4 : 'iii',
+	5 : 'IV',
+	6 : 'bV',
+	7 : 'V',
+	8 : 'bVI',
+	9 : 'vi',
+	10 : 'bVII',
+	11 : 'vii',
+	12 : 'bvii'
+};
+
 */
-
-
-
-
 
 ///////////////////////////////////// API //////////////////////////////////////
 
